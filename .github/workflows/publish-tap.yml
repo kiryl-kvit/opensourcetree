@@ -1,0 +1,90 @@
+name: Update Homebrew Tap
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  update-tap:
+    runs-on: ubuntu-latest
+    if: ${{ !github.event.release.prerelease }}
+
+    steps:
+      - name: Get release info
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Extract version from tag (remove 'v' prefix)
+          VERSION="${{ github.event.release.tag_name }}"
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+          # Download tar.gz files from release
+          gh release download "${{ github.event.release.tag_name }}" \
+            --repo "${{ github.repository }}" \
+            --pattern "*.tar.gz" \
+            --dir ./downloads
+
+          ls -la ./downloads/
+
+          # Calculate SHA256 values from downloaded files
+          LINUX_SHA=$(sha256sum ./downloads/opensourcetree-$VERSION-linux-x64.tar.gz | awk '{print $1}')
+          MACOS_SHA=$(sha256sum ./downloads/opensourcetree-$VERSION-osx-arm64.tar.gz | awk '{print $1}')
+
+          echo "linux_sha=$LINUX_SHA" >> $GITHUB_OUTPUT
+          echo "macos_sha=$MACOS_SHA" >> $GITHUB_OUTPUT
+
+          echo "Linux SHA256: $LINUX_SHA"
+          echo "macOS SHA256: $MACOS_SHA"
+
+      - name: Checkout tap repository
+        uses: actions/checkout@v4
+        with:
+          repository: kiryl-kvit/homebrew-tap
+          token: ${{ secrets.TAP_GITHUB_TOKEN }}
+          path: homebrew-tap
+
+      - name: Checkout main repository for formula template
+        uses: actions/checkout@v4
+        with:
+          path: main-repo
+
+      - name: Update formula
+        run: |
+          VERSION=${{ steps.release.outputs.version }}
+          LINUX_SHA=${{ steps.release.outputs.linux_sha }}
+          MACOS_SHA=${{ steps.release.outputs.macos_sha }}
+
+          # Copy template and replace placeholders
+          cp main-repo/.github/formula-template.rb homebrew-tap/Formula/opensourcetree.rb
+
+          sed -i "s/VERSION_PLACEHOLDER/$VERSION/g" homebrew-tap/Formula/opensourcetree.rb
+          sed -i "s/LINUX_SHA_PLACEHOLDER/$LINUX_SHA/g" homebrew-tap/Formula/opensourcetree.rb
+          sed -i "s/MACOS_SHA_PLACEHOLDER/$MACOS_SHA/g" homebrew-tap/Formula/opensourcetree.rb
+
+          cat homebrew-tap/Formula/opensourcetree.rb
+
+      - name: Commit and push
+        run: |
+          cd homebrew-tap
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/opensourcetree.rb
+          git commit -m "Update opensourcetree to ${{ steps.release.outputs.version }}"
+          git push
+
+      - name: Summary
+        run: |
+          echo ""
+          echo "=============================================="
+          echo "Homebrew tap updated!"
+          echo "=============================================="
+          echo ""
+          echo "Users can now install with:"
+          echo "  brew install kiryl-kvit/tap/opensourcetree"
+          echo ""
+          echo "Or upgrade with:"
+          echo "  brew upgrade opensourcetree"
+          echo "=============================================="

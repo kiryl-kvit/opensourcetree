@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+
+  <!-- 
+    OpenSourceTree Windows Installer
+    
+    UpgradeCode MUST remain constant across all versions.
+    DO NOT change this GUID - it identifies the product for upgrades.
+  -->
+  <Package Name="OpenSourceTree"
+           Version="$(var.ProductVersion)"
+           Manufacturer="OpenSourceTree Contributors"
+           UpgradeCode="DE8CCF3C-37DF-4A91-BDFE-D88266A8699B"
+           Language="1033"
+           Codepage="1252"
+           Scope="perMachine">
+
+    <!-- Summary information -->
+    <SummaryInformation Description="OpenSourceTree - Cross-platform Git GUI"
+                        Manufacturer="OpenSourceTree Contributors" />
+
+    <!-- Handle upgrades: remove old version before installing new -->
+    <MajorUpgrade DowngradeErrorMessage="A newer version of OpenSourceTree is already installed."
+                  Schedule="afterInstallInitialize" />
+
+    <!-- Embed cab files in MSI for single-file distribution -->
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- Add/Remove Programs metadata -->
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/kiryl-kvit/opensourcetree" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/kiryl-kvit/opensourcetree/releases" />
+    <Property Id="ARPCONTACT" Value="https://github.com/kiryl-kvit/opensourcetree/issues" />
+
+    <!-- Default: create desktop shortcut (user can uncheck) -->
+    <Property Id="INSTALLDESKTOPSHORTCUT" Value="1" />
+
+    <!-- Use WixUI_InstallDir dialog set -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <ui:WixUI Id="WixUI_InstallDir" />
+
+    <!-- License (optional - shows in installer) -->
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+
+    <!-- Feature: Main application -->
+    <Feature Id="MainApplication" Title="OpenSourceTree" Description="The main application files." Level="1" AllowAbsent="no">
+      <ComponentGroupRef Id="ApplicationComponents" />
+      <ComponentRef Id="StartMenuShortcut" />
+    </Feature>
+
+    <!-- Feature: Desktop shortcut (optional) -->
+    <Feature Id="DesktopShortcut" Title="Desktop Shortcut" Description="Create a shortcut on the desktop." Level="1">
+      <ComponentRef Id="DesktopShortcutComponent" />
+    </Feature>
+
+  </Package>
+
+  <!-- Directory structure -->
+  <Fragment>
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="OpenSourceTree" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ProgramMenuDir" Name="OpenSourceTree" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="DesktopFolder" />
+  </Fragment>
+
+  <!-- Application files -->
+  <Fragment>
+    <ComponentGroup Id="ApplicationComponents" Directory="INSTALLFOLDER">
+      <!-- Main executable -->
+      <Component Id="MainExecutable" Guid="A1B2C3D4-E5F6-7890-ABCD-EF1234567890">
+        <File Id="OpenSourceTreeExe" 
+              Name="OpenSourceTree.exe" 
+              Source="$(var.SourceDir)\OpenSourceTree.exe" 
+              KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+
+  <!-- Start Menu shortcut (always installed) -->
+  <Fragment>
+    <Component Id="StartMenuShortcut" Directory="ProgramMenuDir" Guid="C3D4E5F6-A7B8-9012-CDEF-345678901234">
+      <Shortcut Id="StartMenuShortcutFile"
+                Name="OpenSourceTree"
+                Description="Cross-platform Git GUI"
+                Target="[INSTALLFOLDER]OpenSourceTree.exe"
+                WorkingDirectory="INSTALLFOLDER" />
+
+      <RemoveFolder Id="RemoveProgramMenuDir" On="uninstall" />
+
+      <RegistryValue Root="HKCU"
+                     Key="Software\OpenSourceTree"
+                     Name="StartMenuShortcut"
+                     Type="integer"
+                     Value="1"
+                     KeyPath="yes" />
+    </Component>
+  </Fragment>
+
+  <!-- Desktop shortcut (optional) -->
+  <Fragment>
+    <Component Id="DesktopShortcutComponent" Directory="DesktopFolder" Guid="D4E5F6A7-B8C9-0123-DEF0-456789012345">
+      <Shortcut Id="DesktopShortcutFile"
+                Name="OpenSourceTree"
+                Description="Cross-platform Git GUI"
+                Target="[INSTALLFOLDER]OpenSourceTree.exe"
+                WorkingDirectory="INSTALLFOLDER" />
+
+      <RegistryValue Root="HKCU"
+                     Key="Software\OpenSourceTree"
+                     Name="DesktopShortcut"
+                     Type="integer"
+                     Value="1"
+                     KeyPath="yes" />
+    </Component>
+  </Fragment>
+
+</Wix>

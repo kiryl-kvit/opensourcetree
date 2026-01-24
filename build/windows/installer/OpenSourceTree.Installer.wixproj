@@ -1,0 +1,22 @@
+<Project Sdk="WixToolset.Sdk/4.0.5">
+
+  <PropertyGroup>
+    <OutputName>OpenSourceTree</OutputName>
+    <OutputType>Package</OutputType>
+    <Platform>x64</Platform>
+    <InstallerPlatform>x64</InstallerPlatform>
+  </PropertyGroup>
+
+  <!-- WiX extensions -->
+  <ItemGroup>
+    <PackageReference Include="WixToolset.UI.wixext" />
+  </ItemGroup>
+
+  <!-- Define constants passed from command line -->
+  <PropertyGroup>
+    <ProductVersion Condition="'$(ProductVersion)' == ''">0.0.0</ProductVersion>
+    <SourceDir Condition="'$(SourceDir)' == ''">$(MSBuildProjectDirectory)\..\..\..\artifacts\win-x64</SourceDir>
+    <DefineConstants>ProductVersion=$(ProductVersion);SourceDir=$(SourceDir)</DefineConstants>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/SolutionItems/">
+    <File Path="Directory.Packages.props" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="OpenSourceTree.UI/OpenSourceTree.UI.csproj" />
+  </Folder>
+</Solution>

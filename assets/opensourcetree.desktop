@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=OpenSourceTree
+GenericName=Git Client
+Comment=Cross-platform Git GUI application
+Exec=opensourcetree %F
+Icon=opensourcetree
+Terminal=false
+Type=Application
+Categories=Development;RevisionControl;
+Keywords=git;version control;vcs;repository;
+StartupWMClass=OpenSourceTree
+MimeType=application/x-git;
